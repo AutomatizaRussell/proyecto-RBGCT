@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Empleados{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="brand-lockup">
+            <div class="brand-mark">
+                <span class="material-symbols-outlined">badge</span>
+            </div>
+            <div>
+                <div class="brand-title">Gestión Humana</div>
+                <div class="brand-subtitle">Portal Administrativo</div>
+            </div>
+        </div>
+
+        <nav class="nav-group">
+            <a class="nav-link" href="/dashboard/">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Inicio</span>
+            </a>
+            <a class="nav-link is-active" href="/employees/">
+                <span class="material-symbols-outlined">group</span>
+                <span>Empleados</span>
+            </a>
+            <a class="nav-link" href="/imports/">
+                <span class="material-symbols-outlined">upload_file</span>
+                <span>Importaciones</span>
+            </a>
+            {% if can_access_admin %}
+            <a class="nav-link" href="/api-access/">
+                <span class="material-symbols-outlined">api</span>
+                <span>Acceso API</span>
+            </a>
+            {% endif %}
+            {% if can_access_admin %}
+            <a class="nav-link" href="/management/">
+                <span class="material-symbols-outlined">admin_panel_settings</span>
+                <span>Administración</span>
+            </a>
+            {% endif %}
+        </nav>
+    </aside>
+
+    <div class="main-area">
+        <header class="topbar">
+            <form method="get" class="search-shell">
+                <span class="material-symbols-outlined">search</span>
+                <input type="text" name="search" value="{{ search_value }}" placeholder="Buscar por nombre, codigo, documento o correo...">
+            </form>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="text-align: right;">
+                    <div style="font-size: 0.82rem; font-weight: 800; color: var(--navy);">{{ request.user.get_full_name|default:request.user.username }}</div>
+                    <div class="muted" style="font-size: 0.74rem;">{{ user_role }}</div>
+                </div>
+                <div class="brand-mark" style="width: 42px; height: 42px; border-radius: 50%;">{{ request.user.username|slice:":1"|upper }}</div>
+            </div>
+        </header>
+
+        <main class="content-body">
+            <section class="surface-card panel-mobile" style="padding: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; flex-wrap: wrap;">
+                    <div>
+                        <span class="badge">Directorio de empleados</span>
+                        <h1 style="font-size: 2.25rem; color: var(--navy); margin-top: 12px;">Listado de empleados</h1>
+                        <p class="muted" style="margin-top: 8px; line-height: 1.7;">
+                            Consulta visual del personal registrado, con filtros simples y acceso a la ficha completa de cada empleado.
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <a class="btn btn-primary" href="/api/v1/exports/employees.xlsx">Exportar Excel</a>
+                    </div>
+                </div>
+
+                <form method="get" class="stack-mobile" style="display: grid; grid-template-columns: 1.2fr 0.8fr 0.8fr auto; gap: 12px; margin-top: 22px;">
+                    <input class="field-input" type="text" name="search" value="{{ search_value }}" placeholder="Buscar empleados...">
+                    <select class="field-input" name="status">
+                        <option value="">Todos los estados</option>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <select class="field-input" name="department">
+                        <option value="">Todas las áreas</option>
+                        {% for department in department_choices %}
+                        <option value="{{ department }}" {% if selected_department == department %}selected{% endif %}>{{ department }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-primary" type="submit">Filtrar</button>
+                </form>
+            </section>
+
+            <section class="surface-card panel-mobile" style="padding: 0; margin-top: 22px; overflow: hidden;">
+                <div style="padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; gap: 12px; border-bottom: 1px solid var(--surface-high);">
+                    <div>
+                        <h2 style="font-size: 1.2rem; color: var(--navy);">Resultados</h2>
+                        <p class="muted" style="margin: 6px 0 0;">{{ page_obj.paginator.count }} empleado{{ page_obj.paginator.count|pluralize:"s" }} registrado{{ page_obj.paginator.count|pluralize:"s" }}.</p>
+                    </div>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead style="background: var(--surface-low);">
+                            <tr>
+                                <th style="padding: 14px 20px; text-align: left;">Empleado</th>
+                                <th style="padding: 14px 20px; text-align: left;">Documento</th>
+                                <th style="padding: 14px 20px; text-align: left;">Área</th>
+                                <th style="padding: 14px 20px; text-align: left;">Cargo</th>
+                                <th style="padding: 14px 20px; text-align: left;">Estado</th>
+                                <th style="padding: 14px 20px; text-align: left;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for employee in employees %}
+                            <tr style="border-top: 1px solid var(--surface-high);">
+                                <td style="padding: 16px 20px;">
+                                    <div style="font-weight: 700; color: var(--navy);">{{ employee.first_name }} {{ employee.last_name }}</div>
+                                    <div class="muted" style="font-size: 0.86rem;">{{ employee.employee_code }}{% if employee.email %} · {{ employee.email }}{% endif %}</div>
+                                </td>
+                                <td style="padding: 16px 20px;">{{ employee.document_number }}</td>
+                                <td style="padding: 16px 20px;">{{ employee.department|default:"Sin área" }}</td>
+                                <td style="padding: 16px 20px;">{{ employee.position|default:"Sin cargo" }}</td>
+                                <td style="padding: 16px 20px;">
+                                    {% if employee.status == "active" %}
+                                    <span class="status-pill success"><span class="mini-dot"></span>{{ employee.get_status_display }}</span>
+                                    {% elif employee.status == "inactive" %}
+                                    <span class="status-pill warning"><span class="mini-dot"></span>{{ employee.get_status_display }}</span>
+                                    {% else %}
+                                    <span class="status-pill info"><span class="mini-dot"></span>{{ employee.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 16px 20px;">
+                                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                        <a href="/employees/{{ employee.id }}/">Ver ficha</a>
+                                        {% if can_edit_employees %}
+                                        <a href="/employees/{{ employee.id }}/edit/">Editar</a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" style="padding: 28px 20px; text-align: center;" class="muted">
+                                    No hay empleados para mostrar con los filtros actuales.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if is_paginated %}
+                <div style="padding: 18px 24px; border-top: 1px solid var(--surface-high); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                    <div class="muted">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</div>
+                    <div style="display: flex; gap: 10px;">
+                        {% if page_obj.has_previous %}
+                        <a class="btn btn-secondary" href="?page={{ page_obj.previous_page_number }}&search={{ search_value }}&status={{ selected_status }}&department={{ selected_department }}">Anterior</a>
+                        {% endif %}
+                        {% if page_obj.has_next %}
+                        <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}&search={{ search_value }}&status={{ selected_status }}&department={{ selected_department }}">Siguiente</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}

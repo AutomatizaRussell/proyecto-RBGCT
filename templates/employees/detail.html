@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle del Empleado{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="brand-lockup">
+            <div class="brand-mark">
+                <span class="material-symbols-outlined">badge</span>
+            </div>
+            <div>
+                <div class="brand-title">Gestión Humana</div>
+                <div class="brand-subtitle">Portal Administrativo</div>
+            </div>
+        </div>
+
+        <nav class="nav-group">
+            <a class="nav-link" href="/dashboard/"><span class="material-symbols-outlined">dashboard</span><span>Panel</span></a>
+            <a class="nav-link is-active" href="/employees/"><span class="material-symbols-outlined">group</span><span>Empleados</span></a>
+            <a class="nav-link" href="/imports/"><span class="material-symbols-outlined">upload_file</span><span>Importaciones</span></a>
+            {% if can_access_admin %}
+            <a class="nav-link" href="/api-access/"><span class="material-symbols-outlined">api</span><span>Acceso API</span></a>
+            {% endif %}
+        </nav>
+    </aside>
+
+    <div class="main-area">
+        <header class="topbar">
+            <div>
+                <div style="font-family: 'Manrope', sans-serif; font-size: 1.05rem; font-weight: 800; color: var(--navy);">Detalle del empleado</div>
+                <div class="muted" style="font-size: 0.82rem;">Vista clara de la informacion registrada en el sistema.</div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                {% if can_edit_employees %}
+                <a class="btn btn-primary" href="/employees/{{ employee.id }}/edit/">Editar empleado</a>
+                {% endif %}
+                <a class="btn btn-secondary" href="/employees/">Volver al listado</a>
+            </div>
+        </header>
+
+        <main class="content-body">
+            <section class="surface-card panel-mobile" style="padding: 24px;">
+                <span class="badge">Ficha de empleado</span>
+                <h1 style="font-size: 2.2rem; color: var(--navy); margin-top: 14px;">{{ employee.first_name }} {{ employee.last_name }}</h1>
+                <p class="muted" style="margin-top: 8px; line-height: 1.7;">
+                    Consulta toda la informacion disponible del empleado en una vista simple y entendible.
+                </p>
+                <div style="margin-top: 18px;">
+                    {% if employee.status == "active" %}
+                    <span class="status-pill success"><span class="mini-dot"></span>{{ employee.get_status_display }}</span>
+                    {% elif employee.status == "inactive" %}
+                    <span class="status-pill warning"><span class="mini-dot"></span>{{ employee.get_status_display }}</span>
+                    {% else %}
+                    <span class="status-pill info"><span class="mini-dot"></span>{{ employee.get_status_display }}</span>
+                    {% endif %}
+                </div>
+            </section>
+
+            <section class="surface-card panel-mobile" style="padding: 0; margin-top: 22px; overflow: hidden;">
+                <div style="padding: 18px 24px; border-bottom: 1px solid var(--surface-high);">
+                    <h2 style="font-size: 1.2rem; color: var(--navy);">Información general</h2>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tbody>
+                            {% for label, value in employee_fields %}
+                            <tr style="border-top: 1px solid var(--surface-high);">
+                                <th style="width: 32%; padding: 16px 20px; text-align: left; background: var(--surface-low); color: var(--navy);">{{ label }}</th>
+                                <td style="padding: 16px 20px; color: var(--text-main);">{{ value }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            {% if employee_extra_fields %}
+            <section class="surface-card panel-mobile" style="padding: 0; margin-top: 22px; overflow: hidden;">
+                <div style="padding: 18px 24px; border-bottom: 1px solid var(--surface-high);">
+                    <h2 style="font-size: 1.2rem; color: var(--navy);">Datos complementarios importados</h2>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tbody>
+                            {% for label, value in employee_extra_fields %}
+                            <tr style="border-top: 1px solid var(--surface-high);">
+                                <th style="width: 32%; padding: 16px 20px; text-align: left; background: var(--surface-low); color: var(--navy);">{{ label }}</th>
+                                <td style="padding: 16px 20px; color: var(--text-main);">{{ value }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            {% endif %}
+        </main>
+    </div>
+</div>
+{% endblock %}

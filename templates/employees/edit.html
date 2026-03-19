@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Empleado{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="brand-lockup">
+            <div class="brand-mark">
+                <span class="material-symbols-outlined">badge</span>
+            </div>
+            <div>
+                <div class="brand-title">Gestion Humana</div>
+                <div class="brand-subtitle">Portal Administrativo</div>
+            </div>
+        </div>
+
+        <nav class="nav-group">
+            <a class="nav-link" href="/dashboard/"><span class="material-symbols-outlined">dashboard</span><span>Inicio</span></a>
+            <a class="nav-link is-active" href="/employees/"><span class="material-symbols-outlined">group</span><span>Empleados</span></a>
+            <a class="nav-link" href="/imports/"><span class="material-symbols-outlined">upload_file</span><span>Importaciones</span></a>
+            {% if can_access_admin %}
+            <a class="nav-link" href="/api-access/"><span class="material-symbols-outlined">api</span><span>Acceso API</span></a>
+            {% endif %}
+            {% if can_access_admin %}
+            <a class="nav-link" href="/management/"><span class="material-symbols-outlined">admin_panel_settings</span><span>Administracion</span></a>
+            {% endif %}
+        </nav>
+    </aside>
+
+    <div class="main-area">
+        <header class="topbar">
+            <div>
+                <div style="font-family: 'Manrope', sans-serif; font-size: 1.05rem; font-weight: 800; color: var(--navy);">Editar empleado</div>
+                <div class="muted" style="font-size: 0.82rem;">Actualiza la informacion del colaborador desde una vista simple y controlada.</div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a class="btn btn-secondary" href="/employees/{{ employee.id }}/">Cancelar</a>
+            </div>
+        </header>
+
+        <main class="content-body">
+            <section class="surface-card panel-mobile" style="padding: 24px;">
+                <span class="badge">Edicion autorizada</span>
+                <h1 style="font-size: 2.1rem; color: var(--navy); margin-top: 14px;">{{ employee.first_name }} {{ employee.last_name }}</h1>
+                <p class="muted" style="margin-top: 8px; line-height: 1.7;">
+                    Solo administradores o usuarios con permiso de edicion pueden modificar estos datos.
+                </p>
+            </section>
+
+            <section class="surface-card panel-mobile" style="padding: 24px; margin-top: 22px;">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div style="margin-bottom: 18px; padding: 14px 16px; border-radius: 16px; background: rgba(237, 139, 0, 0.12); border: 1px solid rgba(237, 139, 0, 0.24); color: #9a5a00;">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <div class="stack-mobile" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px;">
+                        {% for field in form %}
+                        <div {% if field.name == "salary" or field.name == "status" %}style="grid-column: span 1;"{% endif %}>
+                            <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 8px; font-weight: 700; color: var(--navy);">
+                                {{ field.label }}
+                            </label>
+                            {{ field }}
+                            {% if field.errors %}
+                            <div style="margin-top: 8px; color: #9a4f20; font-size: 0.92rem;">{{ field.errors }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px;">
+                        <button class="btn btn-primary" type="submit">Guardar cambios</button>
+                        <a class="btn btn-secondary" href="/employees/{{ employee.id }}/">Volver sin guardar</a>
+                    </div>
+                </form>
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Panel de Inicio{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="brand-lockup">
+            <div class="brand-mark">
+                <span class="material-symbols-outlined">badge</span>
+            </div>
+            <div>
+                <div class="brand-title">Gestión Humana</div>
+                <div class="brand-subtitle">Portal Administrativo</div>
+            </div>
+        </div>
+
+        <nav class="nav-group">
+            <a class="nav-link is-active" href="/dashboard/">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Inicio</span>
+            </a>
+            <a class="nav-link" href="/employees/">
+                <span class="material-symbols-outlined">group</span>
+                <span>Empleados</span>
+            </a>
+            <a class="nav-link" href="/imports/">
+                <span class="material-symbols-outlined">upload_file</span>
+                <span>Importaciones</span>
+            </a>
+            <a class="nav-link" href="/api/v1/exports/employees.xlsx">
+                <span class="material-symbols-outlined">download</span>
+                <span>Exportaciones</span>
+            </a>
+            {% if can_access_admin %}
+            <a class="nav-link" href="/api-access/">
+                <span class="material-symbols-outlined">api</span>
+                <span>Acceso API</span>
+            </a>
+            {% endif %}
+            {% if can_access_admin %}
+            <a class="nav-link" href="/management/">
+                <span class="material-symbols-outlined">admin_panel_settings</span>
+                <span>Administración</span>
+            </a>
+            {% endif %}
+        </nav>
+
+        <div class="surface-muted" style="padding: 18px;">
+            <div class="badge" style="margin-bottom: 12px;">Acceso activo</div>
+            <h3 style="font-size: 1.05rem; margin-bottom: 8px;">{{ user_role }}</h3>
+            <p class="muted" style="font-size: 0.92rem; line-height: 1.6; margin: 0 0 16px;">
+                Sesion iniciada como {{ request.user.username }} para gestionar empleados, archivos e integraciones internas.
+            </p>
+            <a class="btn btn-primary" href="/logout/" style="width: 100%;">Cerrar sesion</a>
+        </div>
+    </aside>
+
+    <div class="main-area">
+        <header class="topbar">
+            <div class="search-shell">
+                <span class="material-symbols-outlined">search</span>
+                <input type="text" value="" placeholder="Buscar empleados, importaciones o acciones...">
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 18px;">
+                <a href="/api/v1/integration-events/" style="color: var(--text-soft);">
+                    <span class="material-symbols-outlined">notifications</span>
+                </a>
+                <div style="width: 1px; height: 32px; background: var(--surface-high);"></div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.82rem; font-weight: 800; color: var(--navy);">{{ request.user.get_full_name|default:request.user.username }}</div>
+                        <div class="muted" style="font-size: 0.74rem;">{{ user_role }}</div>
+                    </div>
+                    <div class="brand-mark" style="width: 42px; height: 42px; border-radius: 50%;">{{ request.user.username|slice:":1"|upper }}</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="content-body">
+            <section class="surface-card hero-panel stack-mobile">
+                <div>
+                    <span class="badge">Portal interno</span>
+                    <h1 style="font-size: clamp(2.2rem, 3vw, 3.5rem); margin-top: 16px; color: var(--navy);">
+                        Gestion operativa de empleados con una experiencia mas clara y ejecutiva.
+                    </h1>
+                    <p class="muted" style="max-width: 720px; line-height: 1.8; margin: 16px 0 0;">
+                        Centraliza altas, actualizaciones, importaciones desde Excel y eventos de integracion desde un panel
+                        pensado para uso interno y crecimiento gradual del sistema.
+                    </p>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px;">
+                        <a class="btn btn-primary" href="/employees/">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">group</span>
+                            Abrir empleados
+                        </a>
+                        <a class="btn btn-secondary" href="/imports/">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">upload_file</span>
+                            Importar Excel
+                        </a>
+                    </div>
+                </div>
+
+                <div class="surface-muted" style="padding: 22px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <h3 style="font-size: 1.2rem; color: var(--navy); margin-bottom: 10px;">Estado de usuario</h3>
+                        <p class="muted" style="line-height: 1.7; margin: 0;">
+                            Tu acceso actual te permite operar las funciones principales del portal y monitorear el flujo administrativo.
+                        </p>
+                    </div>
+                    <div style="display: grid; gap: 12px; margin-top: 24px;">
+                        <div class="status-pill success"><span class="mini-dot"></span> Portal activo</div>
+                        <div class="status-pill info"><span class="mini-dot"></span> Rol: {{ user_role }}</div>
+                        <div class="status-pill warning"><span class="mini-dot"></span> {{ pending_events }} eventos pendientes</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="metric-grid stack-mobile" style="margin-top: 22px;">
+                <article class="surface-card metric-card">
+                    <div class="metric-title">Total empleados</div>
+                    <div class="metric-value">{{ total_employees }}</div>
+                    <div class="muted" style="margin-top: 10px; font-size: 0.84rem;">
+                        Última actualización:
+                        {% if total_employees_updated_at %}
+                        {{ total_employees_updated_at|date:"d/m/Y H:i" }}
+                        {% else %}
+                        Sin registros
+                        {% endif %}
+                    </div>
+                </article>
+                <article class="surface-card metric-card">
+                    <div class="metric-title">Empleados activos</div>
+                    <div class="metric-value" style="color: var(--success);">{{ active_employees }}</div>
+                    <div class="muted" style="margin-top: 10px; font-size: 0.84rem;">
+                        Última actualización:
+                        {% if active_employees_updated_at %}
+                        {{ active_employees_updated_at|date:"d/m/Y H:i" }}
+                        {% else %}
+                        Sin registros
+                        {% endif %}
+                    </div>
+                </article>
+                <article class="surface-card metric-card">
+                    <div class="metric-title">Empleados inactivos</div>
+                    <div class="metric-value" style="color: var(--purple);">{{ inactive_employees }}</div>
+                    <div class="muted" style="margin-top: 10px; font-size: 0.84rem;">
+                        Última actualización:
+                        {% if inactive_employees_updated_at %}
+                        {{ inactive_employees_updated_at|date:"d/m/Y H:i" }}
+                        {% else %}
+                        Sin registros
+                        {% endif %}
+                    </div>
+                </article>
+                <article class="surface-card metric-card">
+                    <div class="metric-title">Eventos pendientes</div>
+                    <div class="metric-value" style="color: var(--orange);">{{ pending_events }}</div>
+                    <div class="muted" style="margin-top: 10px; font-size: 0.84rem;">
+                        {% if pending_events %}
+                        Tarea pendiente:
+                        <br><strong style="color: var(--navy);">{{ next_pending_event_name }}</strong>
+                        {% if next_pending_event_created_at %}
+                        <br>En espera desde: {{ next_pending_event_created_at|date:"d/m/Y H:i" }}
+                        {% endif %}
+                        {% else %}
+                        No hay tareas pendientes
+                        {% endif %}
+                    </div>
+                </article>
+            </section>
+
+            <section class="split-grid stack-mobile" style="margin-top: 22px;">
+                <article class="surface-card panel-mobile" style="padding: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 22px; flex-wrap: wrap;">
+                        <div>
+                            <h2 style="font-size: 1.45rem; color: var(--navy); margin-bottom: 6px;">Workspace rapido</h2>
+                            <p class="muted" style="margin: 0;">Atajos principales para operar el MVP sin depender solo del admin.</p>
+                        </div>
+                        <a class="btn btn-accent" href="/api/v1/exports/employees.xlsx">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">download</span>
+                            Exportar Excel
+                        </a>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+                        <a class="surface-muted" href="/employees/" style="padding: 18px; display: block;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <span class="material-symbols-outlined" style="color: var(--primary);">badge</span>
+                            <strong style="color: var(--navy);">Directorio de empleados</strong>
+                            </div>
+                            <div class="muted">Consulta, crea y actualiza el catalogo completo de empleados.</div>
+                        </a>
+                        <a class="surface-muted" href="/imports/" style="padding: 18px; display: block;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <span class="material-symbols-outlined" style="color: var(--teal);">upload_file</span>
+                            <strong style="color: var(--navy);">Importaciones de Excel</strong>
+                            </div>
+                            <div class="muted">Carga archivos <code>.xlsx</code> y revisa el estado de cada lote.</div>
+                        </a>
+                        {% if can_access_admin %}
+                        <a class="surface-muted" href="/api-access/" style="padding: 18px; display: block;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <span class="material-symbols-outlined" style="color: var(--purple);">api</span>
+                            <strong style="color: var(--navy);">Acceso API</strong>
+                            </div>
+                            <div class="muted">Consulta un listado limpio de endpoints y URLs disponibles para integraciones.</div>
+                        </a>
+                        {% endif %}
+                    </div>
+                </article>
+
+                <aside class="surface-card panel-mobile" style="padding: 24px; display: flex; flex-direction: column; gap: 18px;">
+                    <div>
+                        <h2 style="font-size: 1.35rem; color: var(--navy); margin-bottom: 8px;">Control de acceso</h2>
+                        <p class="muted" style="line-height: 1.75; margin: 0;">
+                            La plataforma exige autenticacion desde el inicio y respeta el perfil del usuario para funciones sensibles.
+                        </p>
+                    </div>
+                    <div class="surface-muted" style="padding: 18px;">
+                        <div class="muted" style="font-size: 0.84rem; margin-bottom: 8px;">Cuenta activa</div>
+                        <div style="font-weight: 800; color: var(--navy);">{{ request.user.username }}</div>
+                        <div class="muted" style="margin-top: 4px;">{{ request.user.email|default:"Sin correo registrado" }}</div>
+                    </div>
+                    <div style="display: grid; gap: 12px;">
+                        {% if can_access_admin %}
+                        <a class="btn btn-secondary" href="/management/">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">admin_panel_settings</span>
+                            Panel admin
+                        </a>
+                        {% endif %}
+                        {% if can_access_admin %}
+                        <a class="btn btn-primary" href="/api-access/">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">api</span>
+                            Ver URLs API
+                        </a>
+                        {% endif %}
+                    </div>
+                </aside>
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}

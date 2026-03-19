@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Importaciones{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="brand-lockup">
+            <div class="brand-mark">
+                <span class="material-symbols-outlined">badge</span>
+            </div>
+            <div>
+                <div class="brand-title">Gestión Humana</div>
+                <div class="brand-subtitle">Portal Administrativo</div>
+            </div>
+        </div>
+
+        <nav class="nav-group">
+            <a class="nav-link" href="/dashboard/">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Inicio</span>
+            </a>
+            <a class="nav-link" href="/employees/">
+                <span class="material-symbols-outlined">group</span>
+                <span>Empleados</span>
+            </a>
+            <a class="nav-link is-active" href="/imports/">
+                <span class="material-symbols-outlined">upload_file</span>
+                <span>Importaciones</span>
+            </a>
+            {% if can_access_admin %}
+            <a class="nav-link" href="/api-access/">
+                <span class="material-symbols-outlined">api</span>
+                <span>Acceso API</span>
+            </a>
+            {% endif %}
+        </nav>
+    </aside>
+
+    <div class="main-area">
+        <header class="topbar">
+            <div>
+                <div style="font-family: 'Manrope', sans-serif; font-size: 1.05rem; font-weight: 800; color: var(--navy);">Carga de empleados</div>
+                <div class="muted" style="font-size: 0.82rem;">Proceso guiado y sin campos tecnicos innecesarios.</div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a class="btn btn-secondary" href="/imports/template.xlsx">Descargar plantilla</a>
+            </div>
+        </header>
+
+        <main class="content-body">
+            {% if messages %}
+            <section style="display: grid; gap: 10px; margin-bottom: 18px;">
+                {% for message in messages %}
+                <div class="surface-card" style="padding: 14px 16px; border-left: 4px solid {% if message.tags == 'success' %}var(--success){% elif message.tags == 'warning' %}var(--warning){% else %}var(--orange){% endif %};">
+                    <div style="color: var(--navy); font-weight: 700;">{{ message }}</div>
+                </div>
+                {% endfor %}
+            </section>
+            {% endif %}
+
+            <section class="split-grid stack-mobile">
+                <article class="surface-card panel-mobile" style="padding: 24px;">
+                    <span class="badge">Asistente de importación</span>
+                    <h1 style="font-size: 2rem; color: var(--navy); margin-top: 14px;">Subir archivo Excel</h1>
+                    <p class="muted" style="margin-top: 10px; line-height: 1.8;">
+                        Selecciona un archivo <code>.xlsx</code>. El sistema procesa todas las filas no vacías, registra el lote y te muestra si la carga fue exitosa, parcial o fallida.
+                    </p>
+
+                    <form method="post" enctype="multipart/form-data" style="margin-top: 22px;">
+                        {% csrf_token %}
+                        <label for="{{ form.file.id_for_label }}" style="display: block; margin-bottom: 8px; font-weight: 700; color: var(--navy);">{{ form.file.label }}</label>
+                        {{ form.file }}
+                        {% if form.file.help_text %}
+                        <div class="muted" style="margin-top: 8px; font-size: 0.9rem;">{{ form.file.help_text }}</div>
+                        {% endif %}
+                        {% if form.file.errors %}
+                        <div style="margin-top: 10px; color: #9a4f20;">{{ form.file.errors }}</div>
+                        {% endif %}
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px;">
+                            <button class="btn btn-primary" type="submit">Procesar archivo</button>
+                            <a class="btn btn-secondary" href="/imports/template.xlsx">Usar plantilla base</a>
+                        </div>
+                    </form>
+                </article>
+
+                <aside class="surface-card panel-mobile" style="padding: 24px;">
+                    <h2 style="font-size: 1.25rem; color: var(--navy); margin-bottom: 10px;">Columnas aceptadas</h2>
+                    <p class="muted" style="line-height: 1.75; margin-bottom: 16px;">
+                        Puedes cargar encabezados en español o técnicos. Además, cualquier columna adicional queda guardada como información complementaria del empleado.
+                    </p>
+                    <div style="display: grid; gap: 10px;">
+                        {% for column in supported_columns %}
+                        <div class="surface-muted" style="padding: 12px 14px;">
+                            <div style="color: var(--navy); font-weight: 800;">{{ column.label }}</div>
+                            <div class="muted" style="margin-top: 4px; font-size: 0.84rem;">{{ column.field }}{% if column.aliases %} | Alias: {{ column.aliases }}{% endif %}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </aside>
+            </section>
+
+            <section class="surface-card panel-mobile" style="padding: 24px; margin-top: 22px;">
+                <div style="display: flex; justify-content: space-between; gap: 14px; align-items: center; flex-wrap: wrap;">
+                    <div>
+                        <h2 style="font-size: 1.3rem; color: var(--navy);">Historial reciente</h2>
+                        <p class="muted" style="margin-top: 6px;">Ultimos lotes subidos y resultado general del proceso.</p>
+                    </div>
+                </div>
+
+                <div style="overflow-x: auto; margin-top: 18px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead style="background: var(--surface-low);">
+                            <tr>
+                                <th style="padding: 14px 20px; text-align: left;">Archivo</th>
+                                <th style="padding: 14px 20px; text-align: left;">Estado</th>
+                                <th style="padding: 14px 20px; text-align: left;">Procesadas</th>
+                                <th style="padding: 14px 20px; text-align: left;">Correctas</th>
+                                <th style="padding: 14px 20px; text-align: left;">Errores</th>
+                                <th style="padding: 14px 20px; text-align: left;">Resumen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for import_item in recent_imports %}
+                            <tr style="border-top: 1px solid var(--surface-high);">
+                                <td style="padding: 16px 20px;">
+                                    <div style="font-weight: 700; color: var(--navy);">{{ import_item.original_filename }}</div>
+                                    <div class="muted" style="font-size: 0.84rem;">{{ import_item.created_at|date:"d/m/Y H:i" }}</div>
+                                </td>
+                                <td style="padding: 16px 20px;">
+                                    {% if import_item.status == "completed" %}
+                                    <span class="status-pill success"><span class="mini-dot"></span>{{ import_item.get_status_display }}</span>
+                                    {% elif import_item.status == "partial" %}
+                                    <span class="status-pill warning"><span class="mini-dot"></span>{{ import_item.get_status_display }}</span>
+                                    {% else %}
+                                    <span class="status-pill info"><span class="mini-dot"></span>{{ import_item.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 16px 20px;">{{ import_item.processed_rows }}</td>
+                                <td style="padding: 16px 20px;">{{ import_item.success_rows }}</td>
+                                <td style="padding: 16px 20px;">{{ import_item.error_rows }}</td>
+                                <td style="padding: 16px 20px;">
+                                    {% if import_item.summary.error %}
+                                    <span class="muted">{{ import_item.summary.error }}</span>
+                                    {% else %}
+                                    <span class="muted">Total: {{ import_item.summary.total_rows|default:0 }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" style="padding: 28px 20px; text-align: center;" class="muted">
+                                    Aun no se han subido archivos para importar.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}

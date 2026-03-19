@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Administración{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="brand-lockup">
+            <div class="brand-mark">
+                <span class="material-symbols-outlined">badge</span>
+            </div>
+            <div>
+                <div class="brand-title">Gestion Humana</div>
+                <div class="brand-subtitle">Portal Administrativo</div>
+            </div>
+        </div>
+
+        <nav class="nav-group">
+            <a class="nav-link" href="/dashboard/">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Inicio</span>
+            </a>
+            <a class="nav-link" href="/employees/">
+                <span class="material-symbols-outlined">group</span>
+                <span>Empleados</span>
+            </a>
+            <a class="nav-link" href="/imports/">
+                <span class="material-symbols-outlined">upload_file</span>
+                <span>Importaciones</span>
+            </a>
+            <a class="nav-link is-active" href="/management/">
+                <span class="material-symbols-outlined">admin_panel_settings</span>
+                <span>Administración</span>
+            </a>
+            <a class="nav-link" href="/api-access/">
+                <span class="material-symbols-outlined">api</span>
+                <span>Acceso API</span>
+            </a>
+        </nav>
+    </aside>
+
+    <div class="main-area">
+        <header class="topbar">
+            <div>
+                <div style="font-family: 'Manrope', sans-serif; font-size: 1.05rem; font-weight: 800; color: var(--navy);">Administración del portal</div>
+                <div class="muted" style="font-size: 0.82rem;">Gestión centralizada de usuarios, permisos y accesos internos.</div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                {% if can_manage_full_access %}
+                <a class="btn btn-primary" href="/management/users/create/">Crear usuario</a>
+                {% endif %}
+                <a class="btn btn-secondary" href="{{ advanced_admin_url }}">Configuración avanzada</a>
+            </div>
+        </header>
+
+        <main class="content-body">
+            <section class="surface-card hero-panel stack-mobile">
+                <div>
+                    <span class="badge">Administración interna</span>
+                    <h1 style="font-size: clamp(2.1rem, 3vw, 3.2rem); margin-top: 16px; color: var(--navy);">
+                        Control de usuarios y permisos desde una vista más clara.
+                    </h1>
+                    <p class="muted" style="max-width: 720px; line-height: 1.8; margin: 16px 0 0;">
+                        Esta sección organiza la administración del sistema para que puedas revisar usuarios, niveles de acceso
+                        y permisos operativos sin depender por completo de una interfaz técnica.
+                    </p>
+                </div>
+
+                <div class="surface-muted" style="padding: 22px;">
+                    <h3 style="font-size: 1.18rem; color: var(--navy); margin-bottom: 12px;">Acciones disponibles</h3>
+                    <div style="display: grid; gap: 12px;">
+                        <a class="btn btn-primary" href="/management/">Gestionar usuarios</a>
+                        {% if can_manage_full_access %}
+                        <a class="btn btn-secondary" href="/management/users/create/">Registrar nuevo usuario</a>
+                        {% else %}
+                        <a class="btn btn-secondary" href="{{ group_admin_url }}">Consultar grupos</a>
+                        {% endif %}
+                    </div>
+                    <p class="muted" style="margin-top: 16px; line-height: 1.7;">
+                        Desde aquí puedes activar o desactivar cuentas, asignar niveles de acceso y autorizar la edición de empleados.
+                    </p>
+                </div>
+            </section>
+
+            <section class="metric-grid stack-mobile" style="margin-top: 22px;">
+                <article class="surface-card metric-card">
+                    <div class="metric-title">Usuarios totales</div>
+                    <div class="metric-value">{{ total_users }}</div>
+                </article>
+                <article class="surface-card metric-card">
+                    <div class="metric-title">Usuarios activos</div>
+                    <div class="metric-value" style="color: var(--success);">{{ active_users }}</div>
+                </article>
+                <article class="surface-card metric-card">
+                    <div class="metric-title">Editores de empleados</div>
+                    <div class="metric-value" style="color: var(--purple);">{{ employee_editors }}</div>
+                </article>
+                <article class="surface-card metric-card">
+                    <div class="metric-title">Superadministradores</div>
+                    <div class="metric-value" style="color: var(--orange);">{{ superusers_count }}</div>
+                </article>
+            </section>
+
+            <section class="surface-card panel-mobile" style="padding: 24px; margin-top: 22px;">
+                <div style="display: flex; justify-content: space-between; gap: 14px; align-items: center; flex-wrap: wrap;">
+                    <div>
+                        <h2 style="font-size: 1.3rem; color: var(--navy);">Usuarios del sistema</h2>
+                        <p class="muted" style="margin-top: 6px;">Vista completa de cuentas, roles, estado y permisos de edición.</p>
+                    </div>
+                    <div class="muted" style="font-size: 0.92rem;">Grupos configurados: {{ groups_count }}</div>
+                </div>
+
+                <div style="overflow-x: auto; margin-top: 18px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead style="background: var(--surface-low);">
+                            <tr>
+                                <th style="padding: 14px 20px; text-align: left;">Usuario</th>
+                                <th style="padding: 14px 20px; text-align: left;">Correo</th>
+                                <th style="padding: 14px 20px; text-align: left;">Rol</th>
+                                <th style="padding: 14px 20px; text-align: left;">Estado</th>
+                                <th style="padding: 14px 20px; text-align: left;">Permiso de edici&oacute;n</th>
+                                <th style="padding: 14px 20px; text-align: left;">&Uacute;ltimo acceso</th>
+                                <th style="padding: 14px 20px; text-align: left;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in management_users %}
+                            <tr style="border-top: 1px solid var(--surface-high);">
+                                <td style="padding: 16px 20px;">
+                                    <div style="font-weight: 700; color: var(--navy);">{{ item.full_name }}</div>
+                                    <div class="muted" style="font-size: 0.86rem;">{{ item.username }}</div>
+                                </td>
+                                <td style="padding: 16px 20px;">{{ item.email }}</td>
+                                <td style="padding: 16px 20px;">
+                                    {% if item.role_label == "Superadministrador" %}
+                                    <span class="status-pill info"><span class="mini-dot"></span>Superadministrador</span>
+                                    {% elif item.role_label == "Administrador" %}
+                                    <span class="status-pill info"><span class="mini-dot"></span>Administrador</span>
+                                    {% elif item.role_label == "Revisor" %}
+                                    <span class="status-pill warning"><span class="mini-dot"></span>Revisor</span>
+                                    {% else %}
+                                    <span class="status-pill warning"><span class="mini-dot"></span>Usuario</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 16px 20px;">
+                                    {% if item.is_active %}
+                                    <span class="status-pill success"><span class="mini-dot"></span>Activo</span>
+                                    {% else %}
+                                    <span class="status-pill warning"><span class="mini-dot"></span>Inactivo</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 16px 20px;">
+                                    {% if item.can_edit_employees %}
+                                    <span class="status-pill success"><span class="mini-dot"></span>Autorizado</span>
+                                    {% else %}
+                                    <span class="status-pill warning"><span class="mini-dot"></span>Solo consulta</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 16px 20px;">
+                                    {% if item.last_login %}
+                                    {{ item.last_login|date:"d/m/Y H:i" }}
+                                    {% else %}
+                                    Nunca
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 16px 20px;">
+                                    <a href="/management/users/{{ item.id }}/">Gestionar acceso</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" style="padding: 28px 20px; text-align: center;" class="muted">
+                                    No hay usuarios disponibles para mostrar.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}

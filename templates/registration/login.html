@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar Sesion{% endblock %}
+
+{% block content %}
+<main style="min-height: 100vh; display: grid; place-items: center; padding: 28px;">
+    <section class="stack-mobile" style="width: min(1160px, 100%); display: grid; grid-template-columns: 1.1fr 0.85fr; gap: 24px; align-items: stretch;">
+        <div class="surface-card panel-mobile" style="padding: 34px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div class="brand-lockup" style="padding: 0; margin-bottom: 28px;">
+                    <div class="brand-mark">
+                        <span class="material-symbols-outlined">badge</span>
+                    </div>
+                    <div>
+                        <div class="brand-title">People Operations</div>
+                        <div class="brand-subtitle">Management Suite</div>
+                    </div>
+                </div>
+
+                <span class="badge">Acceso seguro</span>
+                <h1 style="font-size: clamp(2.4rem, 4vw, 4.1rem); line-height: 1.02; color: var(--navy); margin-top: 18px;">
+                    Gestion corporativa de empleados desde un portal interno mas limpio y consistente.
+                </h1>
+                <p class="muted" style="font-size: 1.03rem; line-height: 1.85; max-width: 620px; margin-top: 18px;">
+                    Inicia sesion para acceder al dashboard, navegar por empleados, procesar importaciones Excel
+                    y operar con permisos de administrador o usuario interno.
+                </p>
+            </div>
+
+            <div class="stack-mobile" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 28px;">
+                <div class="surface-muted" style="padding: 18px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span class="material-symbols-outlined" style="color: var(--primary);">admin_panel_settings</span>
+                        <strong style="color: var(--navy);">Roles y permisos</strong>
+                    </div>
+                    <div class="muted">Acceso controlado para administradores y usuarios del area interna.</div>
+                </div>
+                <div class="surface-muted" style="padding: 18px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span class="material-symbols-outlined" style="color: var(--teal);">verified_user</span>
+                        <strong style="color: var(--navy);">API protegida</strong>
+                    </div>
+                    <div class="muted">Las funciones y endpoints se habilitan solo despues de autenticacion.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="surface-card panel-mobile" style="padding: 34px;">
+            <div style="margin-bottom: 24px;">
+                <div class="badge" style="margin-bottom: 14px;">Welcome back</div>
+                <h2 style="font-size: 2.1rem; color: var(--navy);">Iniciar sesion</h2>
+                <p class="muted" style="margin-top: 8px; line-height: 1.7;">Ingresa con tu usuario interno para abrir el workspace principal.</p>
+            </div>
+
+            {% if form.errors %}
+            <div style="margin-bottom: 18px; padding: 14px 16px; border-radius: 16px; background: rgba(239, 143, 83, 0.14); border: 1px solid rgba(239, 143, 83, 0.22); color: #9a4f20;">
+                Usuario o contrasena incorrectos. Intenta de nuevo con las credenciales registradas.
+            </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ next }}">
+
+                <label for="id_username" style="display: block; margin-bottom: 8px; font-weight: 700; color: var(--navy);">Usuario</label>
+                <input id="id_username" name="username" type="text" autofocus required class="field-input" style="margin-bottom: 18px;">
+
+                <label for="id_password" style="display: block; margin-bottom: 8px; font-weight: 700; color: var(--navy);">Contrasena</label>
+                <input id="id_password" name="password" type="password" required class="field-input" style="margin-bottom: 22px;">
+
+                <button class="btn btn-primary" type="submit" style="width: 100%;">Entrar al sistema</button>
+            </form>
+
+            <div class="surface-muted" style="padding: 16px; margin-top: 18px;">
+                <div class="muted" style="line-height: 1.7;">
+                    Si tu cuenta tiene permisos de administrador podras acceder tambien al panel <code>/admin/</code>.
+                    Si eres usuario interno, entraras al dashboard y a las vistas permitidas.
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}

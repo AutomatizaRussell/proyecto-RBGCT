@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Gestionar Acceso{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="brand-lockup">
+            <div class="brand-mark">
+                <span class="material-symbols-outlined">badge</span>
+            </div>
+            <div>
+                <div class="brand-title">Gestion Humana</div>
+                <div class="brand-subtitle">Portal Administrativo</div>
+            </div>
+        </div>
+
+        <nav class="nav-group">
+            <a class="nav-link" href="/dashboard/"><span class="material-symbols-outlined">dashboard</span><span>Inicio</span></a>
+            <a class="nav-link" href="/employees/"><span class="material-symbols-outlined">group</span><span>Empleados</span></a>
+            <a class="nav-link" href="/imports/"><span class="material-symbols-outlined">upload_file</span><span>Importaciones</span></a>
+            <a class="nav-link is-active" href="/management/"><span class="material-symbols-outlined">admin_panel_settings</span><span>Administración</span></a>
+            <a class="nav-link" href="/api-access/"><span class="material-symbols-outlined">api</span><span>Acceso API</span></a>
+        </nav>
+    </aside>
+
+    <div class="main-area">
+        <header class="topbar">
+            <div>
+                <div style="font-family: 'Manrope', sans-serif; font-size: 1.05rem; font-weight: 800; color: var(--navy);">Gestionar acceso</div>
+                <div class="muted" style="font-size: 0.82rem;">Configura el rol y los permisos del usuario desde una vista clara y administrativa.</div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a class="btn btn-secondary" href="/management/">Volver a administración</a>
+            </div>
+        </header>
+
+        <main class="content-body">
+            {% if messages %}
+            <section style="display: grid; gap: 10px; margin-bottom: 18px;">
+                {% for message in messages %}
+                <div class="surface-card" style="padding: 14px 16px; border-left: 4px solid var(--success);">
+                    <div style="color: var(--navy); font-weight: 700;">{{ message }}</div>
+                </div>
+                {% endfor %}
+            </section>
+            {% endif %}
+
+            <section class="split-grid stack-mobile">
+                <article class="surface-card panel-mobile" style="padding: 24px;">
+                    <span class="badge">Control de acceso</span>
+                    <h1 style="font-size: 2rem; color: var(--navy); margin-top: 14px;">{{ managed_user.get_full_name|default:managed_user.username }}</h1>
+                    <p class="muted" style="margin-top: 8px; line-height: 1.8;">
+                        Usuario: <strong>{{ managed_user.username }}</strong><br>
+                        Rol actual: <strong>{{ managed_user_role }}</strong>
+                    </p>
+
+                    <div style="display: grid; gap: 12px; margin-top: 22px;">
+                        <div class="surface-muted" style="padding: 16px;">
+                            <div style="font-weight: 700; color: var(--navy); margin-bottom: 6px;">Estado de la cuenta</div>
+                            <div class="muted">{% if managed_user.is_active %}El usuario puede ingresar al portal.{% else %}El usuario no puede ingresar al portal.{% endif %}</div>
+                        </div>
+                        <div class="surface-muted" style="padding: 16px;">
+                            <div style="font-weight: 700; color: var(--navy); margin-bottom: 6px;">Permiso de empleados</div>
+                            <div class="muted">
+                                {% if managed_user_can_edit_employees %}
+                                Este usuario puede editar la información de empleados.
+                                {% else %}
+                                Este usuario solo puede consultar información.
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <aside class="surface-card panel-mobile" style="padding: 24px;">
+                    <h2 style="font-size: 1.25rem; color: var(--navy); margin-bottom: 12px;">Actualizar acceso</h2>
+                    <p class="muted" style="line-height: 1.75; margin-bottom: 18px;">
+                        Define los datos principales de la cuenta, su nivel de acceso y las autorizaciones que necesita para trabajar.
+                    </p>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div style="margin-bottom: 16px; color: #9a4f20;">{{ form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <div style="display: grid; gap: 16px;">
+                            {% for field in form %}
+                            <div>
+                                <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 8px; font-weight: 700; color: var(--navy);">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                <div class="muted" style="margin-top: 8px; font-size: 0.9rem;">{{ field.help_text }}</div>
+                                {% endif %}
+                                {% if field.errors %}
+                                <div style="margin-top: 8px; color: #9a4f20;">{{ field.errors }}</div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        {% if can_manage_full_access %}
+                        <div class="surface-muted" style="padding: 16px; margin-top: 18px;">
+                            <div style="font-weight: 700; color: var(--navy); margin-bottom: 6px;">Alcance de superadministración</div>
+                            <div class="muted" style="line-height: 1.7;">
+                                En esta vista puedes ajustar rol, grupos, permisos específicos y contraseña temporal. Estos cambios impactan
+                                directamente el acceso de la persona al portal.
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px;">
+                            <button class="btn btn-primary" type="submit">Guardar cambios</button>
+                            <a class="btn btn-secondary" href="/management/">Cancelar</a>
+                        </div>
+                    </form>
+                </aside>
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+    (function () {
+        const initialRole = document.getElementById("id_initial_role");
+        const addedRole = document.getElementById("id_added_role");
+        if (!initialRole || !addedRole) return;
+
+        function syncAddedRole() {
+            const isSuperAdmin = initialRole.value === "superadmin";
+            addedRole.disabled = isSuperAdmin;
+            if (isSuperAdmin) {
+                addedRole.value = "none";
+            }
+        }
+
+        initialRole.addEventListener("change", syncAddedRole);
+        syncAddedRole();
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "rest_framework/base.html" %}
+{% load rest_framework %}
+
+{% block body %}
+<body>
+  <div class="container" style="max-width: 520px; margin-top: 70px;">
+    <div class="well" style="padding: 28px;">
+      <div style="margin-bottom: 22px;">
+        {% block branding %}
+          <div class="api-brand" style="font-size: 22px; font-weight: 800; color: #fff;">
+            <span class="api-dot"></span>
+            Employee Portal API
+          </div>
+        {% endblock %}
+      </div>
+
+      <form action="{% url 'rest_framework:login' %}" role="form" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}" />
+
+        <div class="form-group {% if form.username.errors %}has-error{% endif %}">
+          <label for="id_username">{{ form.username.label }}:</label>
+          <input type="text" name="username" maxlength="100" autocapitalize="off" autocorrect="off" class="form-control" id="id_username" required autofocus {% if form.username.value %}value="{{ form.username.value }}"{% endif %}>
+          {% if form.username.errors %}
+            <p class="help-block">{{ form.username.errors|striptags }}</p>
+          {% endif %}
+        </div>
+
+        <div class="form-group {% if form.password.errors %}has-error{% endif %}">
+          <label for="id_password">{{ form.password.label }}:</label>
+          <input type="password" name="password" maxlength="100" autocapitalize="off" autocorrect="off" class="form-control" id="id_password" required>
+          {% if form.password.errors %}
+            <p class="help-block">{{ form.password.errors|striptags }}</p>
+          {% endif %}
+        </div>
+
+        {% if form.non_field_errors %}
+          {% for error in form.non_field_errors %}
+            <div class="well well-small" style="padding: 12px 14px; color: #ffd7be; background: rgba(255, 148, 72, 0.12); border-color: rgba(255, 148, 72, 0.28);">
+              {{ error }}
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <div class="form-actions-no-box" style="margin-top: 18px;">
+          <input type="submit" name="submit" value="Entrar a la API" class="btn btn-primary form-control" id="submit-id-submit">
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+{% endblock %}

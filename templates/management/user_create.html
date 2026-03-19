@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Usuario{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="brand-lockup">
+            <div class="brand-mark">
+                <span class="material-symbols-outlined">badge</span>
+            </div>
+            <div>
+                <div class="brand-title">Gestion Humana</div>
+                <div class="brand-subtitle">Portal Administrativo</div>
+            </div>
+        </div>
+
+        <nav class="nav-group">
+            <a class="nav-link" href="/dashboard/"><span class="material-symbols-outlined">dashboard</span><span>Inicio</span></a>
+            <a class="nav-link" href="/employees/"><span class="material-symbols-outlined">group</span><span>Empleados</span></a>
+            <a class="nav-link" href="/imports/"><span class="material-symbols-outlined">upload_file</span><span>Importaciones</span></a>
+            <a class="nav-link is-active" href="/management/"><span class="material-symbols-outlined">admin_panel_settings</span><span>Administración</span></a>
+            <a class="nav-link" href="/api-access/"><span class="material-symbols-outlined">api</span><span>Acceso API</span></a>
+        </nav>
+    </aside>
+
+    <div class="main-area">
+        <header class="topbar">
+            <div>
+                <div style="font-family: 'Manrope', sans-serif; font-size: 1.05rem; font-weight: 800; color: var(--navy);">Crear usuario</div>
+                <div class="muted" style="font-size: 0.82rem;">Registra una nueva cuenta y define desde el inicio su nivel de acceso.</div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a class="btn btn-secondary" href="/management/">Volver a administración</a>
+            </div>
+        </header>
+
+        <main class="content-body">
+            {% if messages %}
+            <section style="display: grid; gap: 10px; margin-bottom: 18px;">
+                {% for message in messages %}
+                <div class="surface-card" style="padding: 14px 16px; border-left: 4px solid var(--success);">
+                    <div style="color: var(--navy); font-weight: 700;">{{ message }}</div>
+                </div>
+                {% endfor %}
+            </section>
+            {% endif %}
+
+            <section class="split-grid stack-mobile">
+                <article class="surface-card panel-mobile" style="padding: 24px;">
+                    <span class="badge">Nuevo acceso</span>
+                    <h1 style="font-size: 2rem; color: var(--navy); margin-top: 14px;">Alta de usuario interno</h1>
+                    <p class="muted" style="margin-top: 8px; line-height: 1.8;">
+                        Crea la cuenta con sus datos básicos, define su rol operativo y deja listo su alcance de trabajo
+                        dentro del portal.
+                    </p>
+
+                    <div style="display: grid; gap: 12px; margin-top: 22px;">
+                        <div class="surface-muted" style="padding: 16px;">
+                            <div style="font-weight: 700; color: var(--navy); margin-bottom: 6px;">Recomendación</div>
+                            <div class="muted">
+                                Usa grupos para permisos recurrentes y deja los permisos específicos solo para casos puntuales.
+                            </div>
+                        </div>
+                        <div class="surface-muted" style="padding: 16px;">
+                            <div style="font-weight: 700; color: var(--navy); margin-bottom: 6px;">Seguridad</div>
+                            <div class="muted">
+                                Comparte la contraseña inicial por un canal seguro y solicita el cambio en el primer ingreso.
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <aside class="surface-card panel-mobile" style="padding: 24px;">
+                    <h2 style="font-size: 1.25rem; color: var(--navy); margin-bottom: 12px;">Datos de la cuenta</h2>
+                    <p class="muted" style="line-height: 1.75; margin-bottom: 18px;">
+                        Completa la información principal y define los permisos iniciales del nuevo usuario.
+                    </p>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div style="margin-bottom: 16px; color: #9a4f20;">{{ form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <div style="display: grid; gap: 16px;">
+                            {% for field in form %}
+                            <div>
+                                <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 8px; font-weight: 700; color: var(--navy);">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                <div class="muted" style="margin-top: 8px; font-size: 0.9rem;">{{ field.help_text|safe }}</div>
+                                {% endif %}
+                                {% if field.errors %}
+                                <div style="margin-top: 8px; color: #9a4f20;">{{ field.errors }}</div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px;">
+                            <button class="btn btn-primary" type="submit">Crear usuario</button>
+                            <a class="btn btn-secondary" href="/management/">Cancelar</a>
+                        </div>
+                    </form>
+                </aside>
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+    (function () {
+        const initialRole = document.getElementById("id_initial_role");
+        const addedRole = document.getElementById("id_added_role");
+        if (!initialRole || !addedRole) return;
+
+        function syncAddedRole() {
+            const isSuperAdmin = initialRole.value === "superadmin";
+            addedRole.disabled = isSuperAdmin;
+            if (isSuperAdmin) {
+                addedRole.value = "none";
+            }
+        }
+
+        initialRole.addEventListener("change", syncAddedRole);
+        syncAddedRole();
+    })();
+</script>
+{% endblock %}
